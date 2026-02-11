@@ -26,19 +26,15 @@ const RemoteSession = ({
   deviceId, 
   deviceName, 
   onDisconnect, 
-  peer,
   remoteStream 
 }: { 
   deviceId: string, 
   deviceName: string, 
   onDisconnect: () => void,
-  peer: Peer | null,
   remoteStream: MediaStream | null
 }) => {
   const [connecting, setConnecting] = useState(!remoteStream);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [messages, setMessages] = useState<{sender: string, text: string}[]>([]);
-  const [inputText, setInputText] = useState('');
 
   useEffect(() => {
     if (remoteStream) {
@@ -49,7 +45,7 @@ const RemoteSession = ({
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-[#020617] flex flex-col">
-      <header className="h-14 glass border-b border-white/10 flex items-center justify-between px-4 shrink-0">
+      <header className="h-14 bg-white/5 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-lg">
             <Monitor size={16} className="text-blue-500" />
@@ -109,7 +105,7 @@ export default function Dashboard() {
 
     newPeer.on('call', (call) => {
       setSession({ id: call.peer, name: 'Incoming Connection' });
-      call.answer(); // Automatically answer for simulation
+      call.answer(); 
       call.on('stream', (stream) => {
         setRemoteStream(stream);
       });
@@ -126,13 +122,11 @@ export default function Dashboard() {
     setSession({ id: remoteId, name: 'Remote Client' });
     
     try {
-      // For real remote desktop, we'd start a screen capture
       const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
       const call = peer.call(cleanId, stream);
       call.on('stream', (s) => setRemoteStream(s));
     } catch (err) {
       console.error("Screen share failed", err);
-      // Even if share fails, we show the session UI for the "vibe"
     }
   };
 
@@ -149,7 +143,6 @@ export default function Dashboard() {
           <RemoteSession 
             deviceId={session.id} 
             deviceName={session.name} 
-            peer={peer}
             remoteStream={remoteStream}
             onDisconnect={() => {
               setSession(null);
@@ -159,8 +152,7 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
-      <aside className="w-20 border-r border-white/5 flex flex-col items-center py-8 gap-8 glass shrink-0">
+      <aside className="w-20 border-r border-white/5 flex flex-col items-center py-8 gap-8 bg-white/[0.02] shrink-0">
         <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-xl shadow-blue-600/30 mb-4">
           <Zap className="text-white" fill="currentColor" size={20} />
         </div>
@@ -176,11 +168,9 @@ export default function Dashboard() {
         </div>
       </aside>
 
-      {/* Main */}
       <main className="flex-1 flex flex-col">
         <header className="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-white/[0.01]">
           <h1 className="text-xl font-bold">OrbDesk <span className="text-blue-500 text-xs align-top ml-1">P2P</span></h1>
-          
           <div className="flex items-center gap-4">
             <div 
               onClick={copyId}
@@ -196,13 +186,11 @@ export default function Dashboard() {
         </header>
 
         <div className="p-8 max-w-5xl mx-auto w-full flex flex-col gap-12">
-          {/* Connection Area */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center py-12">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
               <h2 className="text-4xl font-bold text-white leading-tight">Access any device,<br/><span className="text-blue-500">instantly.</span></h2>
               <p className="text-slate-400 mt-4 text-lg">Enter the Remote ID of another OrbDesk user to start a session.</p>
-              
-              <form onSubmit={handleConnect} className="mt-8 glass p-2 rounded-2xl flex items-center gap-2 focus-within:ring-2 focus-within:ring-blue-500/30 transition-all">
+              <form onSubmit={handleConnect} className="mt-8 bg-white/5 p-2 rounded-2xl flex items-center gap-2 focus-within:ring-2 focus-within:ring-blue-500/30 transition-all">
                 <div className="p-3 text-blue-500"><Cpu size={24} /></div>
                 <input 
                   type="text" 
@@ -216,8 +204,7 @@ export default function Dashboard() {
                 </button>
               </form>
             </motion.div>
-
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass rounded-[2rem] p-8 aspect-square flex flex-col justify-between relative overflow-hidden group">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white/[0.03] rounded-[2rem] p-8 aspect-square flex flex-col justify-between relative overflow-hidden group border border-white/5">
               <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:opacity-10 transition-opacity"><Zap size={200} className="text-blue-500" /></div>
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
@@ -227,48 +214,10 @@ export default function Dashboard() {
                 <div className="text-6xl font-black text-white">100%</div>
                 <p className="text-slate-500 mt-2 font-medium">Uptime globally. High-speed P2P relay active.</p>
               </div>
-              <div className="flex gap-8 pt-6 border-t border-white/5">
-                <div><div className="text-[10px] text-slate-500 uppercase font-bold">Latency</div><div className="text-emerald-500 font-mono text-xl">~14ms</div></div>
-                <div><div className="text-[10px] text-slate-500 uppercase font-bold">Encryption</div><div className="text-blue-400 font-mono text-xl">P2P TLS</div></div>
-              </div>
             </motion.div>
-          </div>
-
-          {/* Device Selection Simulation */}
-          <div className="flex flex-col gap-6">
-             <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold">Recent Connections</h3>
-                <span className="text-slate-500 text-sm">Clear history</span>
-             </div>
-             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[
-                  { name: 'Main Workstation', id: '9921 0032', status: 'online' },
-                  { name: 'MacBook Pro', id: '1102 9943', status: 'online' },
-                  { name: 'Linux Server', id: '0032 1192', status: 'offline' }
-                ].map((dev, i) => (
-                  <div key={i} className="glass p-6 rounded-2xl border border-white/5 hover:border-blue-500/30 transition-all group cursor-pointer">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className={cn("p-3 rounded-xl", dev.status === 'online' ? "bg-emerald-500/10 text-emerald-500" : "bg-slate-700/10 text-slate-500")}>
-                        <Monitor size={20} />
-                      </div>
-                      <div className={cn("w-2 h-2 rounded-full", dev.status === 'online' ? "bg-emerald-500 animate-pulse" : "bg-slate-700")} />
-                    </div>
-                    <div className="font-bold text-lg">{dev.name}</div>
-                    <div className="text-slate-500 font-mono text-sm mt-1">{dev.id}</div>
-                    <button 
-                      onClick={() => { setRemoteId(dev.id); handleConnect(); }}
-                      className="mt-6 w-full py-2 bg-white/5 hover:bg-blue-600 rounded-xl text-sm font-bold transition-all opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
-                    >
-                      Quick Connect
-                    </button>
-                  </div>
-                ))}
-             </div>
           </div>
         </div>
       </main>
     </div>
   );
 }
-   
- 
